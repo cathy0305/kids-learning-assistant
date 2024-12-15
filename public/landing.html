@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Assistant</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/landing.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="language-selector">
+        <button class="lang-btn active" data-lang="ko">
+            <span class="lang-text">KO</span>
+        </button>
+        <button class="lang-btn" data-lang="en">
+            <span class="lang-text">EN</span>
+        </button>
+    </div>
+
+    <main class="landing-container">
+        <div class="header-section">
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="AI Learning Assistant Logo" class="logo">
+            </div>
+            <h1 class="main-title" data-i18n="title">AI 학습 친구와 대화하세요</h1>
+            <p class="subtitle" data-i18n="subtitle">새로운 방식으로 배워보아요</p>
+        </div>
+
+        <div class="age-selection">
+            <h2 class="age-title" data-i18n="ageSelect">연령을 선택하세요</h2>
+            <div class="age-buttons">
+                <button class="age-btn" data-age="3-5">
+                    <span class="age-range">3-5</span>
+                    <span class="age-description" data-i18n="ageDesc1">유아</span>
+                </button>
+                <button class="age-btn" data-age="6-9">
+                    <span class="age-range">6-9</span>
+                    <span class="age-description" data-i18n="ageDesc2">저학년</span>
+                </button>
+                <button class="age-btn" data-age="10-12">
+                    <span class="age-range">10-12</span>
+                    <span class="age-description" data-i18n="ageDesc3">고학년</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="start-section">
+            <button class="start-btn" disabled data-i18n="startBtn">
+                시작하기
+            </button>
+            <p class="start-description" data-i18n="startDesc">
+                연령을 선택하면 시작할 수 있어요
+            </p>
+        </div>
+    </main>
+
+    <footer class="landing-footer">
+        <p class="copyright" data-i18n="copyright">
+            © 2024 AI Learning Assistant. All rights reserved.
+        </p>
+    </footer>
+
+    <script type="module" src="js/i18n.js"></script>
+    <script type="module" src="js/landing.js"></script>
+</body>
+</html>
