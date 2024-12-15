@@ -1,34 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kid's Learning Assistant</title>
+    <title>AI Learning Assistant - Chat</title>
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/chat.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
 </head>
 <body>
-    <header class="header">
-        <h1>AI Learning Assistant</h1>
-        <p>Explore, Learn, and Have Fun!</p>
-    </header>
-    <main class="main-content">
-        <div class="status-bar">
-            <span id="status" class="status">Disconnected</span>
+    <div class="chat-container">
+        <!-- 헤더 영역 -->
+        <header class="chat-header">
+            <button class="back-btn" onclick="history.back()">
+                <span class="visually-hidden">뒤로가기</span>
+                ←
+            </button>
+            <h1 class="chat-title" data-i18n="chatTitle">AI 학습 친구</h1>
+            <button class="history-btn" data-i18n="historyBtn">대화기록</button>
+        </header>
+
+        <!-- 메인 채팅 영역 -->
+        <main class="chat-main">
+            <!-- AI 응답 시각화 영역 -->
+            <div class="ai-response-visualizer">
+                <div class="ai-avatar">
+                    <div class="ai-avatar-circle"></div>
+                    <div class="ai-waves">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <p class="ai-status" data-i18n="aiReady">대화를 시작해보세요</p>
+            </div>
+
+            <!-- 이미지 표시 영역 -->
+            <div class="image-display hidden">
+                <img src="" alt="AI Generated Image" class="generated-image">
+            </div>
+        </main>
+
+        <!-- 하단 컨트롤 영역 -->
+        <footer class="chat-controls">
+            <button class="start-chat-btn primary-button" data-i18n="startChat">
+                대화 시작하기
+            </button>
+            <button class="end-chat-btn secondary-button hidden" data-i18n="endChat">
+                대화 종료
+            </button>
+        </footer>
+
+        <!-- 대화 기록 모달 -->
+        <div class="history-modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 data-i18n="chatHistory">대화 기록</h2>
+                    <button class="close-modal-btn">×</button>
+                </div>
+                <div class="chat-history">
+                    <!-- 대화 기록은 JavaScript로 동적 추가됨 -->
+                </div>
+            </div>
         </div>
-        <div class="interaction-area">
-            <button id="recordButton" disabled class="record-button">Start Recording</button>
-        </div>
-        <div id="responseText" class="response-text">
-            <p class="placeholder">Your response will appear here...</p>
-        </div>
-        <div id="imageContainer" class="image-container">
-            <p class="placeholder">Generated image will appear here...</p>
-        </div>
-    </main>
-    <footer class="footer">
-        <p>&copy; 2024 Kid's Learning Assistant</p>
-    </footer>
-    <div id="error" class="error-toast"></div>
-    <script src="js/main.js"></script>
+    </div>
+
+    <script type="module" src="js/i18n.js"></script>
+    <script type="module" src="js/chat.js"></script>
 </body>
 </html>
