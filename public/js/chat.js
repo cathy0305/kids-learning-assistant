@@ -3,7 +3,6 @@ let mediaRecorder;
 let isRecording = false;
 let audioChunks = [];
 let currentText = '';
-let currentSentence = '';
 let synthesis = window.speechSynthesis;
 let speaking = false;
 let speechQueue = [];
@@ -32,29 +31,65 @@ async function initWebSocket() {
         chatControls.startBtn.disabled = false;
         chatControls.aiStatus.textContent = '대화를 시작해보세요';
     };
-    
-    ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
 
-        switch (data.type) {
-            case 'audio':
-                if (data.data) playAudio(data.data);
-                break;
-            case 'text':
-                if (data.data) updateText(data.data);
-                break;
-            case 'image':
-                if (data.data) updateImage(data.data);
-                break;
-            case 'error':
-                showError(data.data);
-                break;
-            case 'stt_result':
-                if (data.text) addUserMessage(data.text);
-                break;
+    ws.onmessage = async (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', data.type);
+
+            switch (data.type) {
+                case 'audio':
+                    if (data.data) playAudio(data.data);
+                    break;
+
+                case 'text':
+                    if (data.data) {
+                        currentText += data.data;
+                        chatControls.aiStatus.textContent = '답변하고 있어요...';
+
+                        // 문장 단위로 음성 출력
+                        const sentences = data.data.match(/[^.!?]+[.!?]+/g);
+                        if (sentences) {
+                            for (const sentence of sentences) {
+                                await speak(sentence.trim());
+                            }
+                        }
+
+                        if (data.isComplete) {
+                            conversationHistory.push({
+                                type: 'ai',
+                                content: currentText.trim()
+                            });
+                            updateHistoryModal();
+                            currentText = '';
+                        }
+                    }
+                    break;
+
+                case 'stt_result':
+                    if (data.data) {
+                        console.log('STT result:', data.data);
+                        conversationHistory.push({
+                            type: 'user',
+                            content: data.data.trim()
+                        });
+                        updateHistoryModal();
+                    }
+                    break;
+
+                case 'image':
+                    if (data.data) updateImage(data.data);
+                    break;
+
+                case 'error':
+                    showError(data.data);
+                    break;
+            }
+        } catch (error) {
+            console.error('Error processing message:', error);
         }
     };
-    
+
     ws.onclose = () => {
         console.log('Disconnected from server');
         chatControls.startBtn.disabled = true;
@@ -87,7 +122,7 @@ async function initAudio() {
                 const audioData = await audioContext.decodeAudioData(arrayBuffer);
                 const pcmData = convertToPCM16(audioData);
                 const base64Audio = uint8ArrayToBase64(new Uint8Array(pcmData.buffer));
-                
+
                 ws.send(JSON.stringify({ type: 'audio', audio: base64Audio }));
                 audioChunks = [];
             } catch (error) {
@@ -141,7 +176,6 @@ function toggleRecording() {
             chatControls.aiWaves.classList.add('active');
             chatControls.aiStatus.textContent = '듣고 있어요...';
             currentText = '';
-            currentSentence = '';
         } catch (error) {
             console.error('Recording start error:', error);
             showError('녹음을 시작할 수 없습니다.');
@@ -161,18 +195,49 @@ function toggleRecording() {
     }
 }
 
+// 음성 합성 초기화
+function initSpeech() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            const voices = window.speechSynthesis.getVoices();
+            console.log('Available voices:', voices);
+        };
+    }
+}
+
 // 음성 합성
 async function speak(text) {
     return new Promise((resolve, reject) => {
+        window.speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ko-KR';
+        utterance.pitch = 1.0;
+        utterance.rate = 0.9;
+        utterance.volume = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const koreanVoice = voices.find(voice => 
+            voice.lang.includes('ko')
+        );
+        
+        if (koreanVoice) {
+            console.log('Selected voice:', koreanVoice.name);
+            utterance.voice = koreanVoice;
+        }
+
         utterance.onend = () => {
             chatControls.aiWaves.classList.remove('active');
             resolve();
         };
-        utterance.onerror = (error) => reject(error);
+        
+        utterance.onerror = (error) => {
+            console.error('Speech synthesis error:', error);
+            reject(error);
+        };
+
         chatControls.aiWaves.classList.add('active');
-        synthesis.speak(utterance);
+        window.speechSynthesis.speak(utterance);
     });
 }
 
@@ -183,58 +248,21 @@ function updateImage(imageUrl) {
     chatControls.generatedImage.alt = '생성된 이미지';
 }
 
-// 텍스트 업데이트
-function updateText(text) {
-    currentText += text;
-    currentSentence += text;
-    chatControls.aiStatus.textContent = '답변하고 있어요...';
-    
-    if (text.includes('.') || text.includes('?') || text.includes('!')) {
-        speak(currentSentence).catch((error) => 
-            console.error('Speech synthesis error:', error)
-        );
-        
-        if (currentSentence.trim()) {
-            conversationHistory.push({
-                type: 'ai',
-                content: currentSentence.trim()
-            });
-            updateHistoryModal();
-        }
-        
-        currentSentence = '';
-    }
-}
-
-// 사용자 메시지 추가
-function addUserMessage(text) {
-    if (text.trim()) {
-        conversationHistory.push({
-            type: 'user',
-            content: text.trim()
-        });
-        updateHistoryModal();
-    }
-}
-
 // 대화 기록 모달 업데이트
 function updateHistoryModal() {
     const chatHistory = document.querySelector('.chat-history');
+    if (!chatHistory) return;
+    
     chatHistory.innerHTML = '';
     
     conversationHistory.forEach(message => {
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${message.type}-message`;
         
-        const label = document.createElement('div');
-        label.className = 'message-label';
-        label.textContent = message.type === 'user' ? '나' : 'AI';
-        
         const content = document.createElement('div');
         content.className = 'message-content';
         content.textContent = message.content;
         
-        messageDiv.appendChild(label);
         messageDiv.appendChild(content);
         chatHistory.appendChild(messageDiv);
     });
@@ -279,6 +307,7 @@ window.onload = async () => {
         return;
     }
 
+    initSpeech();
     await initWebSocket();
     await initAudio();
     setupEventListeners();
