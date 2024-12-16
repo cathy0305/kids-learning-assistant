@@ -26,8 +26,15 @@ const chatControls = {
 async function initWebSocket() {
     ws = new WebSocket(`ws://${window.location.host}`);
     
+    // 연결 시 선택된 언어 정보 전송
     ws.onopen = () => {
         console.log('Connected to server');
+        const selectedLanguage = localStorage.getItem('selectedLanguage') || 'ko';
+        ws.send(JSON.stringify({
+            type: 'init',
+            ageGroup: localStorage.getItem('selectedAge'),
+            language: selectedLanguage
+        }));
         chatControls.startBtn.disabled = false;
         chatControls.aiStatus.textContent = '대화를 시작해보세요';
     };
@@ -47,7 +54,6 @@ async function initWebSocket() {
                         currentText += data.data;
                         chatControls.aiStatus.textContent = '답변하고 있어요...';
 
-                        // 문장 단위로 음성 출력
                         const sentences = data.data.match(/[^.!?]+[.!?]+/g);
                         if (sentences) {
                             for (const sentence of sentences) {
@@ -211,19 +217,24 @@ async function speak(text) {
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ko-KR';
+        
+        // localStorage에서 선택된 언어 가져오기
+        const selectedLanguage = localStorage.getItem('selectedLanguage') || 'ko';
+        utterance.lang = selectedLanguage === 'ko' ? 'ko-KR' : 'en-US';
+        
         utterance.pitch = 1.0;
         utterance.rate = 0.9;
         utterance.volume = 1.0;
 
         const voices = window.speechSynthesis.getVoices();
-        const koreanVoice = voices.find(voice => 
-            voice.lang.includes('ko')
+        const voiceLang = selectedLanguage === 'ko' ? 'ko' : 'en';
+        const selectedVoice = voices.find(voice => 
+            voice.lang.includes(voiceLang)
         );
         
-        if (koreanVoice) {
-            console.log('Selected voice:', koreanVoice.name);
-            utterance.voice = koreanVoice;
+        if (selectedVoice) {
+            console.log('Selected voice:', selectedVoice.name);
+            utterance.voice = selectedVoice;
         }
 
         utterance.onend = () => {

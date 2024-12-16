@@ -1,6 +1,5 @@
 import { translations, changeLang } from './i18n.js';
 
-
 // landing.js
 document.addEventListener('DOMContentLoaded', () => {
     let selectedAge = null;
@@ -14,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
             changeLang(lang);
             langBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            // 기존 언어 선택 코드에 추가
+            localStorage.setItem('selectedLanguage', btn.dataset.lang);
         });
     });
 
@@ -32,10 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // start 버튼 처리
     startBtn.addEventListener('click', () => {
         if (selectedAge) {
-          window.location.href = `/chat`;  // library.html 대신 chat으로 변경
+            window.location.href = `/chat`;  // library.html 대신 chat으로 변경
         }
-      });
-      
+    });
+
     // 언어 변경 함수
     function changeLang(lang) {
         document.querySelectorAll('[data-i18n]').forEach(element => {
