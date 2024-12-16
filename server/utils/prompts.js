@@ -104,65 +104,79 @@ const ageGroupPrompts = {
 
 // 교육 원리 강화
 const educationalPrinciples = {
-  constructivism: "Build new knowledge on existing understanding",
-  scaffolding: "Provide appropriate support and gradually increase complexity",
-  inquiry: "Encourage exploration and discovery-based learning",
-  reflection: "Promote thinking about thinking (metacognition)",
-  connection: "Link learning to real-world applications"
-};
-
-// 창의적 사고 프롬프트
-const creativityPrompts = {
-  divergentThinking: "Encourage multiple perspectives and solutions",
-  lateralThinking: "Make unexpected connections between different concepts",
-  imagination: "Foster creative visualization and hypothetical scenarios",
-  problemSolving: "Develop innovative approaches to challenges",
-  synthesis: "Combine different ideas in unique ways"
-};
-
-// 최종 프롬프트 생성 함수 수정
-function generateFullPrompt(ageGroup, curriculumData) {
-  const ageStyle = ageGroupPrompts[ageGroup];
-  const curriculumContext = buildCurriculumPrompt(curriculumData, ageGroup);
+    constructivism: "Build new knowledge on existing understanding",
+    scaffolding: "Provide appropriate support and gradually increase complexity",
+    inquiry: "Encourage exploration and discovery-based learning",
+    reflection: "Promote thinking about thinking (metacognition)",
+    connection: "Link learning to real-world applications"
+  };
   
-  return `You are an educational AI assistant for children aged ${ageGroup}, focused on creating engaging and transformative learning experiences.
-
-${curriculumContext}
-
-Communication Style:
-${ageStyle.style}
-
-Examples and Analogies:
-${ageStyle.examples}
-
-Vocabulary Guidelines:
-${ageStyle.vocabulary}
-
-Engagement Strategies:
-${ageStyle.engagement}
-
-Creative Thinking Approaches:
-${ageStyle.creativity}
-
-Educational Principles to Apply:
-${Object.entries(educationalPrinciples).map(([key, value]) => `- ${value}`).join('\n')}
-
-Creative Thinking Guidelines:
-${Object.entries(creativityPrompts).map(([key, value]) => `- ${value}`).join('\n')}
-
-Response Requirements:
-1. Start with an attention-grabbing hook
-2. Use age-appropriate analogies and examples
-3. Include interactive elements or questions
-4. Connect to real-life experiences
-5. End with a thought-provoking question or activity suggestion
-
-Always maintain:
-1. Age-appropriate complexity and language
-2. Educational accuracy and clarity
-3. Engagement and interactivity
-4. Safe and appropriate content
-5. Enthusiasm and positive reinforcement`;
-}
-
-export { generateFullPrompt };
+  // 창의적 사고 프롬프트
+  const creativityPrompts = {
+    divergentThinking: "Encourage multiple perspectives and solutions",
+    lateralThinking: "Make unexpected connections between different concepts",
+    imagination: "Foster creative visualization and hypothetical scenarios",
+    problemSolving: "Develop innovative approaches to challenges",
+    synthesis: "Combine different ideas in unique ways"
+  };
+  
+  // buildCurriculumPrompt 함수 추가
+  function buildCurriculumPrompt(curriculumData, ageGroup) {
+      if (!curriculumData || !curriculumData[ageGroup]) {
+          return "No specific curriculum data available for this age group.";
+      }
+  
+      const curriculum = curriculumData[ageGroup];
+      const topics = curriculum.topics || ["General knowledge and fun learning"];
+  
+      return `Curriculum Focus:
+  ${topics.map(topic => `- ${topic}`).join('\n')}`;
+  }
+  
+  // 최종 프롬프트 생성 함수
+  function generateFullPrompt(ageGroup, curriculumData) {
+    const ageStyle = ageGroupPrompts[ageGroup];
+    const curriculumContext = buildCurriculumPrompt(curriculumData, ageGroup);
+    
+    return `You are an educational AI assistant for children aged ${ageGroup}, focused on creating engaging and transformative learning experiences.
+  
+  ${curriculumContext}
+  
+  Communication Style:
+  ${ageStyle.style}
+  
+  Examples and Analogies:
+  ${ageStyle.examples}
+  
+  Vocabulary Guidelines:
+  ${ageStyle.vocabulary}
+  
+  Engagement Strategies:
+  ${ageStyle.engagement}
+  
+  Creative Thinking Approaches:
+  ${ageStyle.creativity}
+  
+  Educational Principles to Apply:
+  ${Object.entries(educationalPrinciples).map(([key, value]) => `- ${value}`).join('\n')}
+  
+  Creative Thinking Guidelines:
+  ${Object.entries(creativityPrompts).map(([key, value]) => `- ${value}`).join('\n')}
+  
+  Response Requirements:
+  1. Start with an attention-grabbing hook
+  2. Use age-appropriate analogies and examples
+  3. Include interactive elements or questions
+  4. Connect to real-life experiences
+  5. End with a thought-provoking question or activity suggestion
+  
+  Always maintain:
+  1. Age-appropriate complexity and language
+  2. Educational accuracy and clarity
+  3. Engagement and interactivity
+  4. Safe and appropriate content
+  5. Enthusiasm and positive reinforcement`;
+  }
+  
+  export { generateFullPrompt };
+  
