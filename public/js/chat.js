@@ -215,27 +215,37 @@ function initSpeech() {
 // 음성 합성
 async function speak(text) {
     return new Promise((resolve, reject) => {
-        // 이전 음성 취소
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         const selectedLanguage = localStorage.getItem('selectedLanguage') || 'ko';
         utterance.lang = selectedLanguage === 'ko' ? 'ko-KR' : 'en-US';
         
-        // 음성 속도와 품질 최적화
-        utterance.pitch = 1.0;
-        utterance.rate = 1.0; // 속도를 약간 높임
-        utterance.volume = 1.0;
-
-        // 음성 선택 최적화
+        // 음성 선택 로직 개선
         const voices = speechSynthesis.getVoices();
-        const voiceLang = selectedLanguage === 'ko' ? 'ko' : 'en';
-        const selectedVoice = voices.find(voice => 
-            voice.lang.includes(voiceLang) && voice.localService
-        ) || voices.find(voice => voice.lang.includes(voiceLang));
+        console.log('Available voices:', voices); // 디버깅용
         
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
+        // 영어의 경우 더 명확한 음성 선택
+        if (selectedLanguage === 'en') {
+            const englishVoice = voices.find(voice => 
+                (voice.lang === 'en-US' || voice.lang === 'en-GB') && 
+                voice.localService
+            ) || voices.find(voice => 
+                voice.lang === 'en-US' || voice.lang === 'en-GB'
+            );
+            if (englishVoice) {
+                utterance.voice = englishVoice;
+                console.log('Selected English voice:', englishVoice);
+            }
+        } else {
+            // 한국어 음성 선택
+            const koreanVoice = voices.find(voice => 
+                voice.lang === 'ko-KR' && voice.localService
+            ) || voices.find(voice => voice.lang === 'ko-KR');
+            if (koreanVoice) {
+                utterance.voice = koreanVoice;
+                console.log('Selected Korean voice:', koreanVoice);
+            }
         }
 
         utterance.onend = () => {
