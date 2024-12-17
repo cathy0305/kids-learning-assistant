@@ -43,24 +43,25 @@ async function initWebSocket() {
         try {
             const data = JSON.parse(event.data);
             console.log('Received message:', data.type);
-
+    
             switch (data.type) {
                 case 'audio':
                     if (data.data) playAudio(data.data);
                     break;
-
+    
                 case 'text':
                     if (data.data) {
                         currentText += data.data;
                         chatControls.aiStatus.textContent = '답변하고 있어요...';
-
-                        const sentences = data.data.match(/[^.!?]+[.!?]+/g);
-                        if (sentences) {
-                            for (const sentence of sentences) {
-                                await speak(sentence.trim());
-                            }
+    
+                        // 문장이 완성될 때마다 음성 합성 실행
+                        if (data.data.includes('.') || data.data.includes('?') || data.data.includes('!')) {
+                            speak(data.data.trim()).catch(error => 
+                                console.error('Speech synthesis error:', error)
+                            );
                         }
-
+    
+                        // 응답이 완료되면 한 번에 채팅 박스에 표시
                         if (data.isComplete) {
                             conversationHistory.push({
                                 type: 'ai',
@@ -71,7 +72,7 @@ async function initWebSocket() {
                         }
                     }
                     break;
-
+    
                 case 'stt_result':
                     if (data.data) {
                         console.log('STT result:', data.data);
@@ -82,11 +83,11 @@ async function initWebSocket() {
                         updateHistoryModal();
                     }
                     break;
-
+    
                 case 'image':
                     if (data.data) updateImage(data.data);
                     break;
-
+    
                 case 'error':
                     showError(data.data);
                     break;
@@ -214,26 +215,26 @@ function initSpeech() {
 // 음성 합성
 async function speak(text) {
     return new Promise((resolve, reject) => {
+        // 이전 음성 취소
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        
-        // localStorage에서 선택된 언어 가져오기
         const selectedLanguage = localStorage.getItem('selectedLanguage') || 'ko';
         utterance.lang = selectedLanguage === 'ko' ? 'ko-KR' : 'en-US';
         
+        // 음성 속도와 품질 최적화
         utterance.pitch = 1.0;
-        utterance.rate = 0.9;
+        utterance.rate = 1.0; // 속도를 약간 높임
         utterance.volume = 1.0;
 
-        const voices = window.speechSynthesis.getVoices();
+        // 음성 선택 최적화
+        const voices = speechSynthesis.getVoices();
         const voiceLang = selectedLanguage === 'ko' ? 'ko' : 'en';
         const selectedVoice = voices.find(voice => 
-            voice.lang.includes(voiceLang)
-        );
+            voice.lang.includes(voiceLang) && voice.localService
+        ) || voices.find(voice => voice.lang.includes(voiceLang));
         
         if (selectedVoice) {
-            console.log('Selected voice:', selectedVoice.name);
             utterance.voice = selectedVoice;
         }
 
@@ -244,11 +245,12 @@ async function speak(text) {
         
         utterance.onerror = (error) => {
             console.error('Speech synthesis error:', error);
+            chatControls.aiWaves.classList.remove('active');
             reject(error);
         };
 
         chatControls.aiWaves.classList.add('active');
-        window.speechSynthesis.speak(utterance);
+        speechSynthesis.speak(utterance);
     });
 }
 
