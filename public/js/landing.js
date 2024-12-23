@@ -1,4 +1,6 @@
-import { translations, changeLang } from './i18n.js';
+import { translations, changeLang, getCurrentLang } from './i18n.js';
+
+let currentLang = 'ko';
 
 document.addEventListener('DOMContentLoaded', () => {
     let selectedAge = null;
@@ -9,15 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     langBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const lang = btn.dataset.lang;
-            // 언어 변경 및 UI 업데이트
             changeLang(lang);
-            // 활성 버튼 스타일 변경
+            currentLang = lang;
             langBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            // localStorage에 선택된 언어 저장
             localStorage.setItem('selectedLanguage', lang);
-            
-            // 페이지 텍스트 업데이트
             updatePageText(lang);
         });
     });
@@ -42,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedAge && selectedLanguage) {
             window.location.href = '/library.html';
         } else {
-            alert(translations[getCurrentLang()].selectRequired);
+            alert(translations[currentLang].selectRequired);
         }
     });
 
@@ -52,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 저장된 언어 적용
     changeLang(savedLang);
+    currentLang = savedLang;
     document.querySelector(`[data-lang="${savedLang}"]`)?.classList.add('active');
     
     // 저장된 연령 적용

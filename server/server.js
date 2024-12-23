@@ -20,7 +20,12 @@ const __dirname = dirname(__filename);
 // Express 앱 생성 및 서버 설정
 const app = express();
 const server = createServer(app);
-const wss = new WebSocketServer({ server });
+
+// WebSocket 서버 설정
+const wss = new WebSocketServer({ 
+    server,  // Express 서버와 동일한 서버 인스턴스 사용
+    port: process.env.WS_PORT || 8080 
+});
 
 // OpenAI 클라이언트 초기화
 const openai = new OpenAI({
@@ -53,7 +58,13 @@ async function initializeCurriculum() {
 initializeCurriculum();
 
 // 정적 파일 제공 설정
-app.use(express.static(join(__dirname, '../public')));
+app.use(express.static(join(__dirname, '../public'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+        }
+    }
+}));
 app.use(express.json());
 
 // TTS 엔드포인트 수정
@@ -352,8 +363,5 @@ wss.on('connection', (ws) => {
     });
 });
 
-// 서버 실행
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// 서버 실행 부분 제거하고 app export
+export default server;
