@@ -21,9 +21,11 @@ const __dirname = dirname(__filename);
 const app = express();
 const server = createServer(app);
 
-// WebSocket 서버 설정 수정
+// WebSocket 서버 설정
 const wss = new WebSocketServer({ 
-    server  // server 옵션만 사용하고 port 옵션 제거
+    server,
+    clientTracking: true,
+    perMessageDeflate: false
 });
 
 // OpenAI 클라이언트 초기화
@@ -119,7 +121,7 @@ app.get('/api/curriculum', async (req, res) => {
     }
 });
 
-// WebSocket 설정
+// WebSocket 설��
 let currentResponse = '';
 let imageGenerated = false;
 

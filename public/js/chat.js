@@ -22,7 +22,7 @@ const chatControls = {
 
 // WebSocket 초기화
 async function initWebSocket() {
-    ws = new WebSocket(`ws://${window.location.host}`);
+    ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`);
     
     ws.onopen = () => {
         console.log('Connected to server');
