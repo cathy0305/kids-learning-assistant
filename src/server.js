@@ -21,10 +21,9 @@ const __dirname = dirname(__filename);
 const app = express();
 const server = createServer(app);
 
-// WebSocket 서버 설정
+// WebSocket 서버 설정 수정
 const wss = new WebSocketServer({ 
-    server,  // Express 서버와 동일한 서버 인스턴스 사용
-    port: process.env.WS_PORT || 8080 
+    server  // server 옵션만 사용하고 port 옵션 제거
 });
 
 // OpenAI 클라이언트 초기화
@@ -81,7 +80,7 @@ app.post('/api/tts', async (req, res) => {
             input: text,
         });
 
-        // 오디오 스트림을 버퍼로 변환
+        // 오디오 스���림을 버퍼로 변환
         const buffer = Buffer.from(await mp3.arrayBuffer());
         
         // 응답 헤더 설정
@@ -363,5 +362,11 @@ wss.on('connection', (ws) => {
     });
 });
 
-// 서버 실행 부분 제거하고 app export
+const PORT = process.env.PORT || 3000;
+
+// 서버 리스닝 추가
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
 export default server;
