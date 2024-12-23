@@ -51,15 +51,16 @@ initializeCurriculum();
 app.use(express.static(join(__dirname, '../public')));
 app.use(express.json());
 
-// TTS 엔드포인트 추가
+// TTS 엔드포인트 수정
 app.post('/api/tts', async (req, res) => {
     try {
         const { text, language } = req.body;
         
-        // OpenAI TTS API 호출
+        // OpenAI TTS API 호출 - voice를 'nova'로 변경
         const mp3 = await openai.audio.speech.create({
             model: "tts-1",
-            voice: "alloy",
+            voice: "nova",  // 'alloy'에서 'nova'로 변경
+            speed: 1.0,     // 말하기 속도 (0.25-4.0)
             input: text,
         });
 
