@@ -13,34 +13,40 @@
     <div class="chat-container">
         <!-- 헤더 영역 -->
         <header class="chat-header">
-            <button class="back-btn" onclick="history.back()">
-                <span class="visually-hidden">뒤로가기</span>
-                ←
-            </button>
-            <h1 class="chat-title" data-i18n="chatTitle">AI 학습 친구</h1>
-            <button class="history-btn" data-i18n="historyBtn">대화기록</button>
+            <button class="back-btn">←</button>
+            <h1 class="chat-title">AI 친구와 대화하기</h1>
+            <!-- <button class="history-btn">대화 기록</button> -->
         </header>
 
         <!-- 메인 채팅 영역 -->
         <main class="chat-main">
-            <!-- AI 응답 시각화 영역 -->
-            <div class="ai-response-visualizer">
-                <div class="ai-avatar">
-                    <div class="ai-avatar-circle"></div>
-                    <div class="ai-waves">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        <span></span>
+            <div class="chat-interface">
+                <!-- 왼쪽: AI 응답 시각화 및 이미지 영역 -->
+                <div class="left-panel">
+                    <div class="ai-response-visualizer">
+                        <div class="ai-avatar">
+                            <div class="ai-avatar-circle"></div>
+                            <div class="ai-waves">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                        <p class="ai-status" data-i18n="aiReady">대화를 시작해보세요</p>
+                    </div>
+                    <div class="image-display hidden">
+                        <img src="" alt="AI Generated Image" class="generated-image">
                     </div>
                 </div>
-                <p class="ai-status" data-i18n="aiReady">대화를 시작해보세요</p>
-            </div>
-
-            <!-- 이미지 표시 영역 -->
-            <div class="image-display hidden">
-                <img src="" alt="AI Generated Image" class="generated-image">
+                
+                <!-- 오른쪽: 채팅 메시지 영역 -->
+                <div class="chat-messages">
+                    <div class="messages-container">
+                        <!-- 메시지들이 여기에 동적으로 추가됨 -->
+                    </div>
+                </div>
             </div>
         </main>
 
