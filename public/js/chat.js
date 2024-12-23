@@ -24,14 +24,14 @@ const chatControls = {
 async function initWebSocket() {
     ws = new WebSocket(`ws://${window.location.host}`);
     
-    // 연결 시 선택된 언어 정보 전송
     ws.onopen = () => {
         console.log('Connected to server');
-        const selectedLanguage = localStorage.getItem('selectedLanguage') || 'ko';
+        // 선택된 나이, 책, 언어 정보 전송
         ws.send(JSON.stringify({
             type: 'init',
             ageGroup: localStorage.getItem('selectedAge'),
-            language: selectedLanguage
+            bookId: localStorage.getItem('selectedBook'),
+            language: localStorage.getItem('selectedLanguage') || 'ko'
         }));
         chatControls.startBtn.disabled = false;
         chatControls.aiStatus.textContent = '대화를 시작해보세요';

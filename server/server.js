@@ -7,6 +7,11 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { getCurriculumData } from './data/curriculum.js';
 import { generateFullPrompt } from './utils/prompts.js';
+import { imageGenerationSystemInstance } from './utils/ImageGeneration.js';
+import harryPotterDB from '../knowledge/harrypotterDB.js';
+
+// harryPotterPersona 구조 분해 할당
+const { harryPotterPersona } = harryPotterDB;
 
 // Path 설정
 const __filename = fileURLToPath(import.meta.url);
@@ -56,11 +61,12 @@ app.post('/api/tts', async (req, res) => {
     try {
         const { text, language } = req.body;
         
-        // OpenAI TTS API 호출 - voice를 'nova'로 변경
+        // OpenAI TTS API 호출
         const mp3 = await openai.audio.speech.create({
             model: "tts-1",
-            voice: "nova",  // 'alloy'에서 'nova'로 변경
-            speed: 1.0,     // 말하기 속도 (0.25-4.0)
+            voice: "nova",
+            speed: 1.2
+        ,
             input: text,
         });
 
@@ -111,6 +117,7 @@ wss.on('connection', (ws) => {
     console.log('Client connected');
     let selectedAge = "3-5"; // 기본값
     let selectedLanguage = "ko"; // 기본값
+    let selectedBook = null;
     let realtimeWs = null;
 
     const connectToRealtimeAPI = () => {
@@ -125,13 +132,18 @@ wss.on('connection', (ws) => {
             console.log('Connected to OpenAI Realtime API');
             const basePrompt = generateFullPrompt(selectedAge, curriculumCache?.[selectedAge] || {});
             
-            // 언어 지시사항을 선택된 언어에 따라 설정
+            let finalPrompt = basePrompt;
+            if (selectedBook === 'harry-potter') {
+                const persona = harryPotterPersona.Harry[selectedLanguage][selectedAge];
+                finalPrompt = `${basePrompt}\n\n${persona.tone}\n${persona.contextRules}`;
+            }
+
             const languageInstruction = selectedLanguage === 'ko' 
                 ? "Communicate in Korean language only. Maintain the same educational level and style as specified, but translate all responses into natural, child-friendly Korean."
                 : "Communicate in English language only. Maintain the same educational level and style as specified, using natural, child-friendly English.";
             
-            const finalPrompt = `${basePrompt}\n\n${languageInstruction}`;
-    
+            finalPrompt = `${finalPrompt}\n\n${languageInstruction}`;
+
             realtimeWs.send(JSON.stringify({
                 type: 'session.update',
                 session: {
@@ -154,26 +166,6 @@ wss.on('connection', (ws) => {
                         console.log('Session created successfully');
                         currentResponse = '';
                         imageGenerated = false;
-                        break;
-
-                    case 'response.output_audio':
-                    case 'response.audio.delta':
-                        if (event.audio) {
-                            ws.send(JSON.stringify({
-                                type: 'audio',
-                                data: event.audio
-                            }));
-                        }
-                        break;
-
-                    case 'conversation.item.message.created':
-                        if (event.message?.content?.text) {
-                            console.log('STT Result:', event.message.content.text);
-                            ws.send(JSON.stringify({
-                                type: 'stt_result',
-                                data: event.message.content.text
-                            }));
-                        }
                         break;
 
                     case 'response.output_text.delta':
@@ -199,6 +191,25 @@ wss.on('connection', (ws) => {
                         }
                         break;
 
+                    case 'response.audio.delta':
+                        if (event.audio) {
+                            ws.send(JSON.stringify({
+                                type: 'audio',
+                                data: event.audio
+                            }));
+                        }
+                        break;
+
+                    case 'conversation.item.message.created':
+                        if (event.message?.content?.text) {
+                            console.log('STT Result:', event.message.content.text);
+                            ws.send(JSON.stringify({
+                                type: 'stt_result',
+                                data: event.message.content.text
+                            }));
+                        }
+                        break;
+
                     case 'response.done':
                         ws.send(JSON.stringify({
                             type: 'text',
@@ -206,26 +217,62 @@ wss.on('connection', (ws) => {
                             isComplete: true
                         }));
 
-                        if (!imageGenerated && currentResponse.length > 100) {
-                            try {
-                                console.log('Starting image generation...');
-                                const basePrompt = `Create a child-friendly, educational illustration suitable for age ${selectedAge} about: ${currentResponse}`;
-                                const imagePrompt = `${basePrompt}. Style: colorful, simple, engaging, safe for children. Important: DO NOT add any text or letters to the image.`;
-                                
-                                const image = await openai.images.generate({
-                                    model: 'dall-e-3',
-                                    prompt: imagePrompt,
-                                    size: '1024x1024',
-                                    n: 1,
-                                });
+                        console.log('Response completed. Current response length:', currentResponse.length);
+                        console.log('Image generated status:', imageGenerated);
+                        console.log('Checking if image is needed:', imageGenerationSystemInstance.needsImage(currentResponse));
 
-                                if (image.data && image.data[0].url) {
-                                    console.log('Image generation successful');
-                                    ws.send(JSON.stringify({
-                                        type: 'image',
-                                        data: image.data[0].url,
-                                    }));
-                                    imageGenerated = true;
+                        if (!imageGenerated && currentResponse.length > 0) {
+                            try {
+                                if (imageGenerationSystemInstance.needsImage(currentResponse)) {
+                                    console.log('Generating image for response:', currentResponse);
+                                    
+                                    const imagePrompt = imageGenerationSystemInstance.generatePrompt(
+                                        currentResponse,
+                                        selectedAge,
+                                        false
+                                    );
+                                    
+                                    console.log('Generated image prompt:', imagePrompt);
+                                    
+                                    const image = await openai.images.generate({
+                                        model: 'dall-e-3',
+                                        prompt: imagePrompt,
+                                        size: '1024x1024',
+                                        n: 1,
+                                    });
+
+                                    if (image.data && image.data[0].url) {
+                                        console.log('Image generated successfully:', image.data[0].url);
+                                        ws.send(JSON.stringify({
+                                            type: 'image',
+                                            data: image.data[0].url,
+                                        }));
+                                        imageGenerated = true;
+                                    }
+
+                                    if (imageGenerationSystemInstance.requiresSecondImage(currentResponse)) {
+                                        const secondImagePrompt = imageGenerationSystemInstance.generatePrompt(
+                                            currentResponse,
+                                            selectedAge,
+                                            true
+                                        );
+                                        
+                                        const secondImage = await openai.images.generate({
+                                            model: 'dall-e-3',
+                                            prompt: secondImagePrompt,
+                                            size: '1024x1024',
+                                            n: 1,
+                                        });
+
+                                        if (secondImage.data && secondImage.data[0].url) {
+                                            ws.send(JSON.stringify({
+                                                type: 'second_image',
+                                                data: secondImage.data[0].url,
+                                            }));
+                                        }
+                                    }
+                                } else {
+                                    console.log('Image generation not needed for this response');
                                 }
                             } catch (error) {
                                 console.error('Image generation error:', error);
@@ -242,7 +289,7 @@ wss.on('connection', (ws) => {
                         break;
                 }
             } catch (error) {
-                console.error('Error processing message:', error);
+                console.error('Error processing OpenAI message:', error);
             }
         });
 
@@ -260,13 +307,13 @@ wss.on('connection', (ws) => {
             
             if (data.type === 'init') {
                 selectedAge = data.ageGroup;
-                selectedLanguage = data.language; // 언어 설정 저장
+                selectedBook = data.bookId;
+                selectedLanguage = data.language;
                 if (!curriculumCache || Date.now() - lastFetchTime > CACHE_DURATION) {
                     await initializeCurriculum();
                 }
             }
-
-            if (data.type === 'audio' && realtimeWs?.readyState === WebSocket.OPEN) {
+            else if (data.type === 'audio' && realtimeWs?.readyState === WebSocket.OPEN) {
                 currentResponse = '';
                 imageGenerated = false;
 

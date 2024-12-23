@@ -1,6 +1,5 @@
 import { translations, changeLang } from './i18n.js';
 
-// landing.js
 document.addEventListener('DOMContentLoaded', () => {
     let selectedAge = null;
     const startBtn = document.querySelector('.start-btn');
@@ -10,11 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
     langBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const lang = btn.dataset.lang;
+            // 언어 변경 및 UI 업데이트
             changeLang(lang);
+            // 활성 버튼 스타일 변경
             langBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            // 기존 언어 선택 코드에 추가
-            localStorage.setItem('selectedLanguage', btn.dataset.lang);
+            // localStorage에 선택된 언어 저장
+            localStorage.setItem('selectedLanguage', lang);
+            
+            // 페이지 텍스트 업데이트
+            updatePageText(lang);
         });
     });
 
@@ -32,22 +36,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // start 버튼 처리
     startBtn.addEventListener('click', () => {
-        if (selectedAge) {
-            window.location.href = `/chat`;  // library.html 대신 chat으로 변경
+        const selectedAge = localStorage.getItem('selectedAge');
+        const selectedLanguage = localStorage.getItem('selectedLanguage');
+        
+        if (selectedAge && selectedLanguage) {
+            window.location.href = '/library.html';
+        } else {
+            alert(translations[getCurrentLang()].selectRequired);
         }
     });
 
-    // 언어 변경 함수
-    function changeLang(lang) {
-        document.querySelectorAll('[data-i18n]').forEach(element => {
-            const key = element.dataset.i18n;
-            element.textContent = translations[lang][key];
-        });
-        localStorage.setItem('selectedLang', lang);
-    }
-
-    // 초기 언어 설정
-    const savedLang = localStorage.getItem('selectedLang') || 'ko';
+    // 페이지 로드 시 저장된 언어 확인 및 적용
+    const savedLang = localStorage.getItem('selectedLanguage') || 'ko';
+    const savedAge = localStorage.getItem('selectedAge');
+    
+    // 저장된 언어 적용
     changeLang(savedLang);
-    document.querySelector(`[data-lang="${savedLang}"]`).classList.add('active');
+    document.querySelector(`[data-lang="${savedLang}"]`)?.classList.add('active');
+    
+    // 저장된 연령 적용
+    if (savedAge) {
+        document.querySelector(`[data-age="${savedAge}"]`)?.classList.add('selected');
+        startBtn.removeAttribute('disabled');
+    }
 });
+
+// 페이지 텍스트 업데이트 함수
+function updatePageText(lang) {
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.dataset.i18n;
+        element.textContent = translations[lang][key];
+    });
+}

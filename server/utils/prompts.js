@@ -134,49 +134,73 @@ const educationalPrinciples = {
   }
   
   // 최종 프롬프트 생성 함수
-  function generateFullPrompt(ageGroup, curriculumData) {
-    const ageStyle = ageGroupPrompts[ageGroup];
-    const curriculumContext = buildCurriculumPrompt(curriculumData, ageGroup);
-    
-    return `You are an educational AI assistant for children aged ${ageGroup}, focused on creating engaging and transformative learning experiences.
-  
-  ${curriculumContext}
-  
-  Communication Style:
-  ${ageStyle.style}
-  
-  Examples and Analogies:
-  ${ageStyle.examples}
-  
-  Vocabulary Guidelines:
-  ${ageStyle.vocabulary}
-  
-  Engagement Strategies:
-  ${ageStyle.engagement}
-  
-  Creative Thinking Approaches:
-  ${ageStyle.creativity}
-  
-  Educational Principles to Apply:
-  ${Object.entries(educationalPrinciples).map(([key, value]) => `- ${value}`).join('\n')}
-  
-  Creative Thinking Guidelines:
-  ${Object.entries(creativityPrompts).map(([key, value]) => `- ${value}`).join('\n')}
-  
-  Response Requirements:
-  1. Start with an attention-grabbing hook
-  2. Use age-appropriate analogies and examples
-  3. Include interactive elements or questions
-  4. Connect to real-life experiences
-  5. End with a thought-provoking question or activity suggestion
-  
-  Always maintain:
-  1. Age-appropriate complexity and language
-  2. Educational accuracy and clarity
-  3. Engagement and interactivity
-  4. Safe and appropriate content
-  5. Enthusiasm and positive reinforcement`;
+  export function generateFullPrompt(selectedAge, curriculumData) {
+    // 기본 프롬프트 설정
+    let basePrompt = `You are a friendly and educational AI assistant designed to interact with ${selectedAge} year old children.`;
+
+    // 커리큘럼 데이터가 없는 경우의 기본 처리
+    if (!curriculumData) {
+        return `${basePrompt} 
+        Focus on providing age-appropriate responses and maintaining a supportive, encouraging tone.
+        Keep explanations simple and engaging.
+        Use examples and analogies that children can understand.`;
+    }
+
+    try {
+        // 커리큘럼 데이터에서 스타일 정보 추출
+        const style = curriculumData.style || {
+            tone: "friendly and encouraging",
+            complexity: "simple and clear",
+            engagement: "interactive and fun"
+        };
+
+        // 연령대별 기본 설정
+        const ageSpecificGuidelines = {
+            "3-5": {
+                complexity: "very simple",
+                sentenceLength: "short",
+                vocabulary: "basic"
+            },
+            "6-8": {
+                complexity: "simple",
+                sentenceLength: "moderate",
+                vocabulary: "grade-appropriate"
+            },
+            "9-12": {
+                complexity: "moderate",
+                sentenceLength: "varied",
+                vocabulary: "enriched"
+            }
+        };
+
+        // 연령대 매핑
+        const ageGroup = selectedAge in ageSpecificGuidelines ? selectedAge : "6-8";
+        const ageGuidelines = ageSpecificGuidelines[ageGroup];
+
+        // 최종 프롬프트 생성
+        return `${basePrompt}
+
+        Communication Style:
+        - Tone: ${style.tone}
+        - Complexity: ${ageGuidelines.complexity}
+        - Sentence Length: ${ageGuidelines.sentenceLength}
+        - Vocabulary Level: ${ageGuidelines.vocabulary}
+        - Engagement Style: ${style.engagement}
+
+        Key Guidelines:
+        - Keep responses age-appropriate and educational
+        - Use ${ageGuidelines.complexity} language and ${ageGuidelines.sentenceLength} sentences
+        - Maintain a ${style.tone} tone
+        - Make interactions ${style.engagement}
+        - Focus on building confidence and understanding
+        - Avoid complex terminology
+        - Use positive reinforcement
+        - Be patient and supportive`;
+
+    } catch (error) {
+        console.error('Error generating prompt:', error);
+        // 오류 발생 시 기본 프롬프트 반환
+        return basePrompt;
+    }
   }
-  
-  export { generateFullPrompt };
   
