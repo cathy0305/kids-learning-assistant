@@ -226,13 +226,16 @@ wss.on('connection', (ws) => {
                                 if (imageGenerationSystemInstance.needsImage(currentResponse)) {
                                     console.log('Generating image for response:', currentResponse);
                                     
-                                    const imagePrompt = imageGenerationSystemInstance.generatePrompt(
+                                    const imagePrompt = await imageGenerationSystemInstance.generatePrompt(
                                         currentResponse,
-                                        selectedAge,
-                                        false
+                                        selectedAge
                                     );
                                     
                                     console.log('Generated image prompt:', imagePrompt);
+                                    
+                                    if (typeof imagePrompt !== 'string' || !imagePrompt.trim()) {
+                                        throw new Error('Invalid prompt generated');
+                                    }
                                     
                                     const image = await openai.images.generate({
                                         model: 'dall-e-3',
