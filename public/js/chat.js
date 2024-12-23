@@ -51,24 +51,28 @@ async function initWebSocket() {
     
                 case 'text':
                     if (data.data) {
-                        currentText += data.data;
-                        chatControls.aiStatus.textContent = '답변하고 있어요...';
-    
-                        // 문장이 완성될 때마다 음성 합성 실행
-                        if (data.data.includes('.') || data.data.includes('?') || data.data.includes('!')) {
-                            speak(data.data.trim()).catch(error => 
-                                console.error('Speech synthesis error:', error)
-                            );
-                        }
-    
-                        // 응답이 완료되면 한 번에 채팅 박스에 표시
-                        if (data.isComplete) {
-                            conversationHistory.push({
-                                type: 'ai',
-                                content: currentText.trim()
-                            });
-                            updateHistoryModal();
-                            currentText = '';
+                        if (!data.isComplete) {
+                            // 진행 중인 응답 처리
+                            currentText += data.data;
+                            chatControls.aiStatus.textContent = '답변하고 있어요...';
+
+                            // 문장 단위 음성 합성
+                            if (data.data.includes('.') || data.data.includes('?') || data.data.includes('!')) {
+                                speak(data.data.trim()).catch(error => 
+                                    console.error('Speech synthesis error:', error)
+                                );
+                            }
+                        } else {
+                            // 완성된 응답 처리 (한 번만 실행)
+                            const trimmedText = currentText.trim();
+                            if (trimmedText && !conversationHistory.some(msg => msg.content === trimmedText)) {
+                                conversationHistory.push({
+                                    type: 'ai',
+                                    content: trimmedText
+                                });
+                                updateHistoryModal();
+                            }
+                            currentText = ''; // 초기화
                         }
                     }
                     break;
@@ -284,6 +288,7 @@ function updateHistoryModal() {
         
         const content = document.createElement('div');
         content.className = 'message-content';
+        console.log(message.content);
         content.textContent = message.content;
         
         messageDiv.appendChild(content);
