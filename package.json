@@ -1,18 +1,14 @@
 {
-  "name": "kids-learning-assistant",
+  "name": "server",
   "version": "1.0.0",
   "type": "module",
-  "description": "Interactive learning assistant for kids",
-  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "cd src && node server.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
-    "node-fetch": "^3.3.2",
-    "openai": "^4.75.0",
+    "openai": "^4.77.0",
     "ws": "^8.18.0"
   }
 }
