@@ -5,9 +5,9 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { OpenAI } from 'openai';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getCurriculumData } from '../server/data/curriculum.js';
-import { generateFullPrompt } from '../server/utils/prompts.js';
-import { imageGenerationSystemInstance } from '../server/utils/ImageGeneration.js';
+import { getCurriculumData } from './data/curriculum.js';
+import { generateFullPrompt } from './utils/prompts.js';
+import { imageGenerationSystemInstance } from './utils/ImageGeneration.js';
 import harryPotterDB from '../knowledge/harrypotterDB.js';
 
 // harryPotterPersona 구조 분해 할당
@@ -80,7 +80,7 @@ app.post('/api/tts', async (req, res) => {
             input: text,
         });
 
-        // 오디오 스���림을 버퍼로 변환
+        // 오디오 스림을 버퍼로 변환
         const buffer = Buffer.from(await mp3.arrayBuffer());
         
         // 응답 헤더 설정
