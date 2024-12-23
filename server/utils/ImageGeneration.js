@@ -315,10 +315,21 @@ class ImageGenerationSystem {
     }
   
     determineAgeGroup(age) {
+        // 문자열로 된 연령대를 그대로 사용
+        if (typeof age === 'string' && age.includes('-')) {
+            if (["3-5", "6-9", "10-12"].includes(age)) {
+                return age;
+            }
+        }
+
+        // 숫자로 된 나이를 연령대로 변환
         const numAge = parseInt(age);
         if (numAge >= 3 && numAge <= 5) return "3-5";
         if (numAge >= 6 && numAge <= 9) return "6-9";
-        return "10-12";
+        if (numAge >= 10 && numAge <= 12) return "10-12";
+        
+        // 기본값
+        return "6-9";
     }
   
     needsImage(content) {

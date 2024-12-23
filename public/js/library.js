@@ -12,7 +12,7 @@ const bookData = {
            ko: "마법 세계의 모험",
            en: "Adventure in the magical world"
        },
-       ageRatings: ["3-5", "6-8", "9-12"],
+       ageRatings: ["6-8", "9-12"],
        status: "active",
        coverImage: "../assets/books/harrypotter_bookcover.png"
    },
@@ -112,6 +112,10 @@ class LibraryManager {
        
        if (book.status === 'active') {
            div.addEventListener('click', () => {
+               console.log('Current Age:', this.currentAge);
+               console.log('Book Age Ratings:', book.ageRatings);
+               console.log('Is Age Appropriate:', isAgeAppropriate);
+               
                if (!isAgeAppropriate) {
                    alert(ageWarningMessages[this.currentLang]);
                    return;
