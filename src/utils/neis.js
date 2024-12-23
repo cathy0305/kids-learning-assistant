@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Node.js 18 이상에서는 fetch가 내장되어 있어 별도 import 필요 없음
 
 const NEIS_CONFIG = {
   baseUrl: 'https://open.neis.go.kr/hub',
