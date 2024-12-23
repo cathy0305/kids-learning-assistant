@@ -222,47 +222,49 @@ function initSpeech() {
 }
 
 // 음성 합성
-function speak(text) {
-    return new Promise((resolve, reject) => {
-        if (!text) {
-            resolve();
-            return;
+async function speak(text) {
+    if (!text) return;
+
+    try {
+        console.log('TTS 요청 시작:', text); // 디버깅용 로그 추가
+        
+        const response = await fetch('/api/tts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text,
+                language: localStorage.getItem('selectedLanguage') || 'ko'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`TTS 요청 실패: ${response.status}`);
         }
 
-        // 기존 음성 중단
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(text);
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
         
-        // 한국어 음성 설정
-        utterance.lang = 'ko-KR';
-        
-        // 음성 목록 가져오기
-        const voices = window.speechSynthesis.getVoices();
-        console.log('사용 가능한 음성:', voices.map(v => `${v.name} (${v.lang})`));
-        
-        // 한국어 음성 찾기
-        const koreanVoice = voices.find(voice => 
-            voice.lang.includes('ko') && voice.localService
-        );
-        
-        if (koreanVoice) {
-            console.log('선택된 음성:', koreanVoice.name);
-            utterance.voice = koreanVoice;
-        }
-
-        utterance.onend = () => {
-            console.log('음성 합성 완료');
-            resolve();
+        audio.onerror = (error) => {
+            console.error('오디오 재생 에러:', error);
+            URL.revokeObjectURL(audioUrl);
         };
 
-        utterance.onerror = (error) => {
-            console.error('음성 합성 에러:', error);
-            resolve(); // 에러가 발생해도 Promise 해결
-        };
-
-        window.speechSynthesis.speak(utterance);
-    });
+        await audio.play();
+        
+        return new Promise((resolve) => {
+            audio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+            };
+        });
+    } catch (error) {
+        console.error('TTS 처리 중 에러 발생:', error);
+        chatControls.aiStatus.textContent = 'TTS 처리 중 오류가 발생했습니다.';
+        throw error;
+    }
 }
 
 // 이미지 업데이트
@@ -310,7 +312,7 @@ window.onload = async () => {
         return;
     }
 
-    // 메���지 컨테이너 존재 확인
+    // 메시지 컨테이너 존재 확인
     const messagesContainer = document.querySelector('.messages-container');
     if (!messagesContainer) {
         console.error('메시지 컨테이너를 찾을 수 없습니다. HTML 구조를 확인해주세요.');

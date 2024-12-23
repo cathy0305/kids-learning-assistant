@@ -51,6 +51,36 @@ initializeCurriculum();
 app.use(express.static(join(__dirname, '../public')));
 app.use(express.json());
 
+// TTS 엔드포인트 추가
+app.post('/api/tts', async (req, res) => {
+    try {
+        const { text, language } = req.body;
+        
+        // OpenAI TTS API 호출
+        const mp3 = await openai.audio.speech.create({
+            model: "tts-1",
+            voice: "alloy",
+            input: text,
+        });
+
+        // 오디오 스트림을 버퍼로 변환
+        const buffer = Buffer.from(await mp3.arrayBuffer());
+        
+        // 응답 헤더 설정
+        res.set({
+            'Content-Type': 'audio/mpeg',
+            'Content-Length': buffer.length
+        });
+
+        // 오디오 데이터 전송
+        res.send(buffer);
+        
+    } catch (error) {
+        console.error('TTS 에러:', error);
+        res.status(500).json({ error: 'TTS 처리 중 오류가 발생했습니다.' });
+    }
+});
+
 // 기본 라우트
 app.get('/', (req, res) => {
     res.sendFile(join(__dirname, '../public/landing.html'));
